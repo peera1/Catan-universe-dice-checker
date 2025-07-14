@@ -52,14 +52,17 @@ def run_dice_fairness_tests():
             score = fairness_score_display.text_content()
             print(f"ציון הוגנות לאחר {num_rolls} זריקות: {score}")
 
-            # --- NEW: Get and print the distribution of sums ---
-            # Execute JavaScript in the browser context to get the rollCounts array
-            # We slice from index 2 because rollCounts[0] and rollCounts[1] are unused (for sums 0 and 1)
-            roll_counts_from_browser = page.evaluate("() => window.rollCounts.slice(2)")
-            
+            # --- NEW: Get and print the distribution of sums by reading from DOM ---
             print("התפלגות סכומים:")
-            for i, count in enumerate(roll_counts_from_browser):
-                sum_value = i + 2 # Since slice(2) means index 0 here corresponds to sum 2
+            for sum_value in range(2, 13): # Iterate from sum 2 to sum 12
+                # Construct the ID of the chart bar for the current sum
+                bar_id = f'#sum-{sum_value}'
+                
+                # Find the locator for this bar and get its 'data-count' attribute
+                # If the attribute is not found, get_attribute returns None. Handle it as 0.
+                count_str = page.locator(bar_id).get_attribute('data-count')
+                count = int(count_str) if count_str else 0
+                
                 print(f"  סכום {sum_value}: {count} פעמים")
             # --- END NEW ---
 
