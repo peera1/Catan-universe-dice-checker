@@ -1,0 +1,32 @@
+# .github/workflows/dice_fairness_test.yml
+name: Dice Fairness Scheduled Test
+
+on:
+  schedule:
+    # Runs every hour at minute 0 (e.g., 00:00, 01:00, 02:00 UTC)
+    # Adjust cron expression as needed for your timezone/frequency
+    - cron: '0 * * * *' 
+  
+  workflow_dispatch:
+    # Allows manual triggering of the workflow from the GitHub UI
+
+jobs:
+  test_dice_fairness:
+    runs-on: ubuntu-latest # Run on a Linux environment
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4 # Get your code from the repository
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x' # Use a recent Node.js version
+
+    - name: Install Playwright
+      run: |
+        npm install playwright # Install Playwright package
+        npx playwright install --with-deps # Install browser binaries and their dependencies
+
+    - name: Run Dice Fairness Test
+      run: node diceTest.js # Execute your JavaScript test script
