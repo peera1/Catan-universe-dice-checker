@@ -43,9 +43,11 @@ def run_dice_fairness_tests():
                 die1_input.fill(str(die1))
                 die2_input.fill(str(die2))
 
-                # Wait for the button to become enabled (due to validation) and then click it
-                # Using locator.wait_for(state="enabled")
-                roll_button.wait_for(state="enabled")
+                # Wait for the roll button to become enabled (i.e., not disabled)
+                # FIX: Use page.wait_for_selector to wait for the button to not have the disabled attribute
+                page.wait_for_selector('#rollButton:not([disabled])') 
+                
+                # Now that the button is enabled, click it
                 roll_button.click()
             
             # After all rolls, get the fairness score
