@@ -11,8 +11,6 @@ def run_dice_fairness_tests():
         page = browser.new_page()
 
         # Navigate to the local HTML file
-        # Make sure the path is correct relative to where the script runs
-        # Assuming your HTML file is named index.html and is in the same directory
         html_file_path = Path(__file__).parent / 'index.html'
         page.goto(f"file://{html_file_path}")
 
@@ -44,7 +42,6 @@ def run_dice_fairness_tests():
                 die2_input.fill(str(die2))
 
                 # Wait for the roll button to become enabled (i.e., not disabled)
-                # FIX: Use page.wait_for_selector to wait for the button to not have the disabled attribute
                 page.wait_for_selector('#rollButton:not([disabled])') 
                 
                 # Now that the button is enabled, click it
@@ -54,6 +51,17 @@ def run_dice_fairness_tests():
             time.sleep(0.5) # Give a small moment for UI to update fairness score
             score = fairness_score_display.text_content()
             print(f"ציון הוגנות לאחר {num_rolls} זריקות: {score}")
+
+            # --- NEW: Get and print the distribution of sums ---
+            # Execute JavaScript in the browser context to get the rollCounts array
+            # We slice from index 2 because rollCounts[0] and rollCounts[1] are unused (for sums 0 and 1)
+            roll_counts_from_browser = page.evaluate("() => window.rollCounts.slice(2)")
+            
+            print("התפלגות סכומים:")
+            for i, count in enumerate(roll_counts_from_browser):
+                sum_value = i + 2 # Since slice(2) means index 0 here corresponds to sum 2
+                print(f"  סכום {sum_value}: {count} פעמים")
+            # --- END NEW ---
 
         # --- Run Tests ---
 
