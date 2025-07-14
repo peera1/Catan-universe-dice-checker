@@ -41,12 +41,14 @@ async function runDiceFairnessTests() {
                 await die2Input.fill(die2.toString());
 
                 // Wait for the button to become enabled (due to validation) and then click it
-                await rollButton.waitForSelector(':not([disabled])');
+                // FIX: Use locator.waitFor({ state: 'enabled' }) instead of locator.waitForSelector()
+                await rollButton.waitFor({ state: 'enabled' }); 
                 await rollButton.click();
             }
 
             // After all rolls, get the fairness score
-            await page.waitForTimeout(500); // Give a small moment for UI to update fairness score
+            // Add a small delay to ensure the UI updates the fairness score
+            await page.waitForTimeout(500); 
             const score = await fairnessScoreDisplay.textContent();
             console.log(`ציון הוגנות לאחר ${numRolls} זריקות: ${score}`);
         }
