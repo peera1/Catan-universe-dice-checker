@@ -21,12 +21,14 @@
             font-family: 'Heebo', sans-serif;
             background-color: #1a202c; /* Dark background */
             color: #e2e8f0; /* Light text */
-            display: flex;
+            display: flex; /* Make body a flex container */
             justify-content: center;
-            align-items: flex-start; /* Align at top, not center, for better scroll on smaller screens */
-            min-height: 100vh;
+            align-items: flex-start; /* Align children to the top */
+            min-height: 100vh; /* Ensure body itself is at least viewport height */
             padding: 20px;
+            gap: 25px; /* Space between main app and history panel */
             overflow-x: hidden; /* Prevent horizontal scroll */
+            flex-wrap: wrap; /* Allows stacking on smaller screens */
         }
 
         #app-container {
@@ -35,11 +37,14 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
             padding: 35px;
             width: 100%;
-            max-width: 900px;
+            max-width: 900px; /* Limit width of main app */
+            flex-grow: 1; /* Allow main app to grow */
             text-align: center;
             display: flex;
             flex-direction: column;
             gap: 30px;
+            /* NEW: Ensure main app container is at least as tall as the history panel */
+            min-height: calc(100vh - 40px); /* 100vh - (2 * body padding) */
         }
 
         h1 {
@@ -49,7 +54,7 @@
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
         }
 
-        .description-text { /* New class for the description paragraph */
+        .description-text { 
             font-size: 1.1em;
             line-height: 1.6;
             margin-bottom: 20px;
@@ -67,7 +72,7 @@
         .dice-inputs {
             display: flex;
             gap: 15px;
-            flex-wrap: wrap; /* Allow wrapping on small screens */
+            flex-wrap: wrap; 
             justify-content: center;
         }
 
@@ -83,7 +88,6 @@
             color: #90cdf4;
         }
 
-        /* --- NEW: LTR direction for numbers in input fields --- */
         .dice-input-group input[type="number"] {
             width: 80px;
             padding: 12px;
@@ -94,7 +98,7 @@
             font-size: 1.4em;
             text-align: center;
             direction: ltr; /* Set direction to Left-to-Right for numbers */
-            -moz-appearance: textfield; /* Hide arrows for Firefox */
+            -moz-appearance: textfield; 
             appearance: textfield;
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
@@ -105,13 +109,11 @@
             box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.5);
         }
 
-        /* Style for invalid input */
         .dice-input-group input[type="number"].invalid-input {
             border-color: #e53e3e; /* Red border */
             box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.5);
         }
 
-        /* Hide arrows for Chrome, Safari, Edge */
         .dice-input-group input::-webkit-outer-spin-button,
         .dice-input-group input::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -141,13 +143,13 @@
             box-shadow: 0 5px 15px rgba(99, 179, 237, 0.4);
         }
 
-        button#rollButton:hover:not(:disabled) { /* Only hover if not disabled */
+        button#rollButton:hover:not(:disabled) {
             background-color: #4299e1;
             transform: translateY(-2px);
             box-shadow: 0 7px 20px rgba(99, 179, 237, 0.6);
         }
 
-        button:disabled { /* Style for disabled buttons */
+        button:disabled {
             background-color: #4a5568;
             color: #a0aec0;
             cursor: not-allowed;
@@ -161,11 +163,65 @@
             color: #a0aec0;
             margin-top: 20px;
         }
-        /* --- NEW: LTR direction for the total rolls number --- */
         #totalRollsDisplay {
-            direction: ltr; /* Numbers will display LTR */
-            display: inline-block; /* Needed for direction to apply correctly within RTL text */
+            direction: ltr; 
+            display: inline-block; 
         }
+
+        /* Fairness Score Section Styles */
+        .fairness-score-section {
+            margin-top: 25px;
+            padding: 15px 20px;
+            background-color: #3b4457;
+            border-radius: 8px;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3);
+            border: 1px solid #4a5568;
+        }
+
+        .fairness-score-section p {
+            font-size: 1.15em;
+            color: #90cdf4;
+            margin-bottom: 10px;
+            direction: rtl; 
+        }
+
+        #fairnessScoreDisplay {
+            font-weight: bold;
+            color: #fff;
+            direction: ltr; 
+            display: inline-block;
+            margin-right: 5px; 
+        }
+
+        .fairness-bar {
+            width: 100%;
+            height: 15px;
+            background-color: #4a5568; 
+            border-radius: 8px;
+            overflow: hidden; 
+            margin-top: 10px;
+            border: 1px solid #5d687b;
+        }
+
+        .fairness-fill {
+            height: 100%;
+            width: 0%; 
+            transition: width 0.5s ease-out, background-color 0.5s ease-out;
+            border-radius: 8px; 
+            background-color: #38a169; /* Default good green */
+        }
+
+        /* Color coding for fairness score (based on a 1-10 scale) */
+        .fairness-fill.score-10 { background-color: #38a169; } /* Dark Green */
+        .fairness-fill.score-9 { background-color: #48bb78; } /* Standard Green */
+        .fairness-fill.score-8 { background-color: #68d391; } /* Light Green */
+        .fairness-fill.score-7 { background-color: #81e6d9; } /* Light Green/Teal */
+        .fairness-fill.score-6 { background-color: #bee3f8; } /* Light Blue */
+        .fairness-fill.score-5 { background-color: #f6e05e; } /* Yellow */
+        .fairness-fill.score-4 { background-color: #fbd38d; } /* Light Orange */
+        .fairness-fill.score-3 { background-color: #fc8181; } /* Light Red */
+        .fairness-fill.score-2 { background-color: #e53e3e; } /* Red */
+        .fairness-fill.score-1 { background-color: #c53030; } /* Dark Red */
 
 
         /* Chart Section */
@@ -175,11 +231,10 @@
 
         .chart-container {
             display: flex;
-            /* --- CHANGED: Reverse the order of flex items to make 2 appear on the left --- */
-            flex-direction: row-reverse; 
-            align-items: flex-end; /* Bars grow from bottom */
+            flex-direction: row-reverse; /* Reverse order to make 2 appear on the left */
+            align-items: flex-end; 
             justify-content: space-around;
-            height: 250px; /* Fixed height for the chart area */
+            height: 250px; 
             background-color: #1a202c;
             border-radius: 8px;
             padding: 10px;
@@ -189,99 +244,181 @@
         }
 
         .chart-bar {
-            width: 7%; /* Width for each bar */
+            width: 7%; 
             max-width: 60px;
-            background-color: #48bb78; /* Green accent for bars */
-            border-radius: 5px 5px 0 0; /* Rounded top corners */
+            background-color: #48bb78; 
+            border-radius: 5px 5px 0 0; 
             position: relative;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             align-items: center;
-            transition: height 0.5s ease-out; /* Smooth animation for height changes */
-            min-height: 2px; /* Ensure bar is visible even with 0 height percentage */
-            transform-origin: bottom; /* Ensure scale animation works from bottom */
+            transition: height 0.5s ease-out; 
+            min-height: 2px; 
+            transform-origin: bottom; 
             box-shadow: 0 0 8px rgba(72, 187, 120, 0.5);
         }
 
         .chart-bar:hover {
             box-shadow: 0 0 15px rgba(72, 187, 120, 0.8);
-            transform: scaleY(1.02); /* Slight scale on hover */
+            transform: scaleY(1.02); 
         }
 
-        /* --- NEW: LTR direction for numbers in bar labels --- */
         .bar-label {
             position: absolute;
-            bottom: -25px; /* Position below the bar */
+            bottom: -25px; 
             color: #cbd5e0;
             font-size: 0.9em;
             font-weight: bold;
-            direction: ltr; /* Set direction to Left-to-Right for numbers */
+            direction: ltr; 
         }
 
-        /* --- NEW: LTR direction for numbers in bar counts --- */
         .bar-count {
             position: absolute;
-            top: -20px; /* Position above the bar */
+            top: -20px; 
             color: #fff;
             font-size: 0.85em;
             font-weight: bold;
-            opacity: 0; /* Hide by default */
+            opacity: 0; 
             transition: opacity 0.3s ease;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
-            direction: ltr; /* Set direction to Left-to-Right for numbers */
+            direction: ltr; 
         }
 
         .chart-bar[data-count="0"] .bar-count {
-            opacity: 0; /* Ensure count is hidden if 0 */
+            opacity: 0; 
         }
 
         .chart-bar:not([data-count="0"]) .bar-count {
-            opacity: 1; /* Show count if not 0 */
+            opacity: 1; 
         }
         
         .chart-bar.active .bar-count {
-            opacity: 1; /* Always show count for active/non-zero bars */
+            opacity: 1; 
         }
 
         /* Reset Button Specific Styles (smaller and positioned separately) */
         #resetButton {
-            background-color: transparent; /* Transparent background */
-            color: #a0aec0; /* Lighter color */
-            border: 1px solid #4a5568; /* Subtle border */
-            padding: 8px 15px; /* Smaller padding */
-            font-size: 0.9em; /* Smaller font */
-            margin-top: 30px; /* Space from the rest of the content */
-            align-self: flex-end; /* Align to the end of the container */
+            background-color: transparent; 
+            color: #a0aec0; 
+            border: 1px solid #4a5568; 
+            padding: 8px 15px; 
+            font-size: 0.9em; 
+            margin-top: 30px; 
+            align-self: flex-end; 
             border-radius: 6px;
-            box-shadow: none; /* No strong shadow */
+            box-shadow: none; 
         }
 
         #resetButton:hover {
-            background-color: #4a5568; /* Slight background on hover */
+            background-color: #4a5568; 
             color: #fff;
-            transform: none; /* No transform */
+            transform: none; 
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* History Panel Styles */
+        #history-panel {
+            background-color: #2d3748;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            width: 300px; /* Fixed width for the history panel */
+            flex-shrink: 0; /* Prevent it from shrinking */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: calc(100vh - 40px); /* This makes it fixed to viewport height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            position: sticky; /* Keeps the panel visible on scroll */
+            top: 20px; /* Distance from the top of the viewport */
+            direction: rtl; /* Overall text direction for the panel */
+        }
+
+        #history-panel h2 {
+            color: #90cdf4;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #4a5568; /* Separator */
+            padding-bottom: 10px;
+            text-align: center; /* NEW: Center align history panel title */
+        }
+
+        #roll-history-list {
+            flex-grow: 1; /* Allows the list to take available space */
+            overflow-y: auto; /* Scroll specific to the list content */
+            padding-right: 5px; /* Space for scrollbar */
+        }
+
+        .roll-entry {
+            background-color: #1a202c; /* Darker background for each entry */
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            text-align: right; /* Default text alignment for RTL */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .roll-entry:last-child {
+            margin-bottom: 0; /* No margin after the last item */
+        }
+
+        .roll-details {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #e2e8f0;
+            direction: ltr; /* Force LTR for the numbers (e.g., 3 + 4 = 7) */
+            text-align: right; /* Re-align to right after LTR for Hebrew display */
+            display: block; /* Ensures direction applies to the whole line */
+        }
+        .roll-details span {
+            color: #48bb78; /* Green color for dice values and sum */
+            font-family: 'Heebo', sans-serif; /* Ensure Hebrew font is used */
+        }
+
+        .roll-meta {
+            font-size: 0.85em;
+            color: #a0aec0;
+            margin-top: 5px;
+            direction: rtl; /* Ensure meta text (מספר זריקה, שעה) is RTL */
+        }
+        .roll-meta span {
+            direction: ltr; /* Force LTR for the actual numbers (roll #, time) */
+            display: inline-block; /* Needed for direction to apply correctly */
         }
 
 
         /* Responsive adjustments */
-        @media (max-width: 768px) {
+        @media (max-width: 1200px) { /* Adjust layout for smaller screens */
+            body {
+                flex-direction: column; /* Stack main app and history panel vertically */
+                align-items: center; /* Center them when stacked */
+                padding: 15px;
+                gap: 20px;
+            }
+            #app-container {
+                min-height: auto; /* NEW: Remove fixed min-height when stacked */
+                width: 100%;
+                max-width: 700px; /* Max width for stacked elements */
+            }
+            #history-panel {
+                height: auto; /* NEW: Allow history panel to take natural height */
+                position: static; /* NEW: Remove sticky behavior when stacked */
+                width: 100%;
+                max-width: 700px; /* Match max-width of main app */
+                margin-top: 20px; /* Add space when stacked */
+            }
             h1 {
                 font-size: 2.2em;
             }
             .description-text {
                 font-size: 1em;
             }
-            .input-section {
-                flex-direction: column;
-            }
             .dice-inputs {
-                flex-direction: column;
-                align-items: center;
+                flex-direction: row; /* Keep dice inputs side by side if there's room */
             }
             .chart-bar {
-                width: 7%; /* Adjust width for smaller screens */
+                width: 7%; 
                 max-width: 40px;
             }
             .chart-container {
@@ -292,7 +429,7 @@
                 max-width: 250px;
             }
             #resetButton {
-                align-self: center; /* Center the reset button on small screens */
+                align-self: center; 
             }
         }
 
@@ -304,10 +441,20 @@
                 font-size: 1.8em;
             }
             .chart-bar {
-                width: 7%; /* Further adjust width */
+                width: 7%; 
                 max-width: 30px;
             }
             .bar-label, .bar-count {
+                font-size: 0.75em;
+            }
+            .fairness-score-section p {
+                font-size: 1em;
+            }
+            .roll-entry {
+                padding: 8px 10px;
+                font-size: 0.9em;
+            }
+            .roll-meta {
                 font-size: 0.75em;
             }
         }
@@ -339,6 +486,14 @@
                 <button id="rollButton" disabled>הוסף זריקה</button>
             </div>
             <p class="total-rolls">סה"כ זריקות: <span id="totalRollsDisplay">0</span></p>
+
+            <!-- Fairness Score Section -->
+            <div class="fairness-score-section">
+                <p>ציון הוגנות (מתוך 10): <span id="fairnessScoreDisplay">אין מספיק נתונים</span></p>
+                <div class="fairness-bar">
+                    <div id="fairnessFill" class="fairness-fill" style="width: 0%;"></div>
+                </div>
+            </div>
         </section>
 
         <section class="chart-section">
@@ -352,11 +507,39 @@
         <button id="resetButton">איפוס נתונים</button>
     </div>
 
+    <!-- History Panel -->
+    <div id="history-panel">
+        <h2>היסטוריית זריקות</h2>
+        <div id="roll-history-list">
+            <!-- Roll entries will be added here by JavaScript -->
+        </div>
+    </div>
+
     <script>
         // Initialize counts for sums 2 through 12
-        // Index 0 and 1 will be unused to easily map sum to index
         let rollCounts = new Array(13).fill(0); 
         let totalRolls = 0;
+        const MAX_HISTORY_ITEMS = 50; // Limit history to prevent performance issues
+
+        // Expected probabilities (numerators out of 36 total combinations) for sums 2-12
+        const expectedOutcomes = [
+            0, 0, 
+            1, // Sum 2 (1+1)
+            2, // Sum 3 (1+2, 2+1)
+            3, // Sum 4
+            4, // Sum 5
+            5, // Sum 6
+            6, // Sum 7 (most probable)
+            5, // Sum 8
+            4, // Sum 9
+            3, // Sum 10
+            2, // Sum 11
+            1  // Sum 12 (6+6)
+        ];
+        const totalPossibleOutcomes = 36;
+
+        // Normalization factor for fairness score (tuned for 1-10 scale)
+        const NORMALIZATION_FACTOR = 1.84; 
 
         // Get DOM elements
         const die1Input = document.getElementById('die1');
@@ -365,16 +548,18 @@
         const resetButton = document.getElementById('resetButton');
         const totalRollsDisplay = document.getElementById('totalRollsDisplay');
         const chartContainer = document.getElementById('chartContainer');
+        const fairnessScoreDisplay = document.getElementById('fairnessScoreDisplay');
+        const fairnessFill = document.getElementById('fairnessFill');
+        const rollHistoryList = document.getElementById('roll-history-list'); 
 
         // Function to create chart bars dynamically
         function createChartBars() {
-            // Loop from 2 to 12. The CSS 'flex-direction: row-reverse' will handle the visual order.
             for (let i = 2; i <= 12; i++) {
                 const bar = document.createElement('div');
                 bar.className = 'chart-bar';
-                bar.id = `sum-${i}`; // Unique ID for each bar
+                bar.id = `sum-${i}`; 
                 bar.setAttribute('data-sum', i);
-                bar.setAttribute('data-count', 0); // Initial count
+                bar.setAttribute('data-count', 0); 
 
                 const countSpan = document.createElement('span');
                 countSpan.className = 'bar-count';
@@ -382,7 +567,7 @@
 
                 const labelSpan = document.createElement('span');
                 labelSpan.className = 'bar-label';
-                labelSpan.textContent = i; // The sum value (2-12)
+                labelSpan.textContent = i; 
 
                 bar.appendChild(countSpan);
                 bar.appendChild(labelSpan);
@@ -392,7 +577,6 @@
 
         // Function to render/update the chart
         function renderChart() {
-            // Find the maximum count to normalize bar heights
             const maxCount = Math.max(...rollCounts);
 
             for (let i = 2; i <= 12; i++) {
@@ -401,14 +585,12 @@
                     const currentCount = rollCounts[i];
                     let heightPercentage = 0;
                     if (maxCount > 0) {
-                        // We use 90% of the container height to leave some padding at the top
                         heightPercentage = (currentCount / maxCount) * 90; 
                     }
                     bar.style.height = `${heightPercentage}%`;
                     bar.querySelector('.bar-count').textContent = currentCount;
-                    bar.setAttribute('data-count', currentCount); // Update data attribute for CSS
+                    bar.setAttribute('data-count', currentCount); 
 
-                    // Add 'active' class if count is not zero to ensure count text is visible
                     if (currentCount > 0) {
                         bar.classList.add('active');
                     } else {
@@ -419,34 +601,54 @@
             totalRollsDisplay.textContent = totalRolls;
         }
 
-        // --- NEW VALIDATION FUNCTIONS ---
+        // Function to calculate and display the fairness score
+        function calculateFairnessScore() {
+            if (totalRolls < 10) {
+                fairnessScoreDisplay.textContent = 'אין מספיק נתונים';
+                fairnessFill.style.width = '0%';
+                fairnessFill.className = 'fairness-fill'; 
+                return;
+            }
+
+            let totalDeviation = 0;
+            for (let i = 2; i <= 12; i++) {
+                const expectedCount = (expectedOutcomes[i] / totalPossibleOutcomes) * totalRolls;
+                totalDeviation += Math.abs(rollCounts[i] - expectedCount);
+            }
+
+            let score = 10 - Math.round(totalDeviation / NORMALIZATION_FACTOR);
+            score = Math.max(1, Math.min(10, score)); 
+
+            fairnessScoreDisplay.textContent = score;
+            
+            fairnessFill.style.width = `${score * 10}%`; 
+            fairnessFill.className = 'fairness-fill'; 
+            fairnessFill.classList.add(`score-${score}`); 
+        }
 
         // Function to validate a single die input and update its visual state
         function validateDieValue(inputElement) {
             let value = parseInt(inputElement.value);
             let isValid = true;
 
-            // Check if input is empty or not a number, mark as invalid for button enablement
             if (inputElement.value === '' || isNaN(value)) {
                 isValid = false;
             } 
-            // If it's a number but out of range, "snap" it to the nearest valid value
             else if (value < 1) {
-                inputElement.value = 1; // Correct to 1
-                isValid = true; // Now it's valid
+                inputElement.value = 1; 
+                isValid = true; 
             } else if (value > 6) {
-                inputElement.value = 6; // Correct to 6
-                isValid = true; // Now it's valid
+                inputElement.value = 6; 
+                isValid = true; 
             }
 
-            // Apply/remove invalid-input class for visual feedback
             if (!isValid) {
                 inputElement.classList.add('invalid-input');
             } else {
                 inputElement.classList.remove('invalid-input');
             }
             
-            checkRollButtonState(); // Update the state of the "Add Roll" button
+            checkRollButtonState(); 
         }
 
         // Function to check both inputs and enable/disable the roll button
@@ -454,16 +656,37 @@
             const die1 = parseInt(die1Input.value);
             const die2 = parseInt(die2Input.value);
 
-            // True if die1 is a number between 1 and 6
             const isDie1Valid = !isNaN(die1) && die1 >= 1 && die1 <= 6;
-            // True if die2 is a number between 1 and 6
             const isDie2Valid = !isNaN(die2) && die2 >= 1 && die2 <= 6;
 
-            // Enable button only if both are valid
             rollButton.disabled = !(isDie1Valid && isDie2Valid);
         }
 
-        // --- END NEW VALIDATION FUNCTIONS ---
+        // Function to add roll to history panel
+        function addRollToHistory(die1, die2, sum, rollNumber) {
+            const now = new Date();
+            // Format time as HH:MM:SS LTR
+            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+
+            const newEntry = document.createElement('div');
+            newEntry.className = 'roll-entry';
+            newEntry.innerHTML = `
+                <div class="roll-details">
+                    <span>${die1}</span> + <span>${die2}</span> = <span>${sum}</span>
+                </div>
+                <div class="roll-meta">
+                    זריקה #: <span>${rollNumber}</span> | שעה: <span>${timeString}</span>
+                </div>
+            `;
+            
+            // Add new entry to the top of the list
+            rollHistoryList.prepend(newEntry);
+
+            // Limit the number of history items
+            if (rollHistoryList.children.length > MAX_HISTORY_ITEMS) {
+                rollHistoryList.lastElementChild.remove();
+            }
+        }
 
 
         // Function to handle a new roll submission
@@ -471,7 +694,6 @@
             const die1 = parseInt(die1Input.value);
             const die2 = parseInt(die2Input.value);
 
-            // Final validation check before processing (should mostly be handled by button.disabled)
             if (isNaN(die1) || isNaN(die2) || die1 < 1 || die1 > 6 || die2 < 1 || die2 > 6) {
                 alert('בבקשה הזינו מספרים תקינים בין 1 ל-6 עבור כל קוביה.');
                 return;
@@ -482,12 +704,20 @@
             totalRolls++;
 
             renderChart();
+            addRollToHistory(die1, die2, sum, totalRolls); 
 
-            // Clear inputs after successful roll
+            if (totalRolls % 10 === 0 || totalRolls === 10) {
+                calculateFairnessScore();
+            } else if (totalRolls < 10) { 
+                fairnessScoreDisplay.textContent = 'אין מספיק נתונים';
+                fairnessFill.style.width = '0%';
+                fairnessFill.className = 'fairness-fill'; 
+            }
+
             die1Input.value = '';
             die2Input.value = '';
-            die1Input.focus(); // Keep focus on first input for convenience
-            checkRollButtonState(); // Re-check button state after clearing inputs
+            die1Input.focus(); 
+            checkRollButtonState(); 
         }
 
         // Function to reset all data with confirmation
@@ -496,11 +726,18 @@
                 rollCounts.fill(0);
                 totalRolls = 0;
                 renderChart();
+                
+                fairnessScoreDisplay.textContent = 'אין מספיק נתונים';
+                fairnessFill.style.width = '0%';
+                fairnessFill.className = 'fairness-fill'; 
+                
+                rollHistoryList.innerHTML = ''; 
+                
                 alert('הנתונים אופסו בהצלחה!');
                 die1Input.value = '';
                 die2Input.value = '';
                 die1Input.focus();
-                checkRollButtonState(); // Re-check button state after reset
+                checkRollButtonState(); 
             } else {
                 alert('איפוס הנתונים בוטל.');
             }
@@ -510,24 +747,20 @@
         rollButton.addEventListener('click', handleRoll);
         resetButton.addEventListener('click', resetChart);
 
-        // Add input event listeners for live validation and button state update
         die1Input.addEventListener('input', () => validateDieValue(die1Input));
         die2Input.addEventListener('input', () => validateDieValue(die2Input));
         
-        // Also validate on blur (when user clicks/tabs away) to catch final states
         die1Input.addEventListener('blur', () => validateDieValue(die1Input));
         die2Input.addEventListener('blur', () => validateDieValue(die2Input));
 
-
-        // Allow pressing Enter key in input fields to trigger roll
         die1Input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !rollButton.disabled) { // Only if button is enabled
+            if (e.key === 'Enter' && !rollButton.disabled) { 
                 e.preventDefault(); 
                 handleRoll();
             }
         });
         die2Input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !rollButton.disabled) { // Only if button is enabled
+            if (e.key === 'Enter' && !rollButton.disabled) { 
                 e.preventDefault();
                 handleRoll();
             }
@@ -536,8 +769,12 @@
         // Initial setup on page load
         document.addEventListener('DOMContentLoaded', () => {
             createChartBars();
-            renderChart(); // Render initial empty chart
-            checkRollButtonState(); // Set initial button state (should be disabled as inputs are empty)
+            renderChart(); 
+            checkRollButtonState(); 
+            
+            fairnessScoreDisplay.textContent = 'אין מספיק נתונים'; 
+            fairnessFill.style.width = '0%';
+            fairnessFill.className = 'fairness-fill'; 
         });
 
     </script>
