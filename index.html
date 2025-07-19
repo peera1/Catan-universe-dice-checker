@@ -538,8 +538,9 @@
         ];
         const totalPossibleOutcomes = 36;
 
-        // Normalization factor for fairness score (tuned for 1-10 scale)
-        const NORMALIZATION_FACTOR = 35; // Adjusted for more realistic fairness scoring
+        // NEW: Sensitivity factor for fairness score (tuned for 1-10 scale, higher value = more sensitive)
+        // This factor scales the deviation relative to totalRolls.
+        const SENSITIVITY_FACTOR = 6; 
 
         // Get DOM elements
         const die1Input = document.getElementById('die1');
@@ -603,10 +604,10 @@
 
         // Function to calculate and display the fairness score
         function calculateFairnessScore() {
-            if (totalRolls < 10) {
+            if (totalRolls < 10) { // Needs at least 10 rolls for a meaningful score
                 fairnessScoreDisplay.textContent = 'אין מספיק נתונים';
                 fairnessFill.style.width = '0%';
-                fairnessFill.className = 'fairness-fill'; 
+                fairnessFill.className = 'fairness-fill'; // Reset class
                 return;
             }
 
@@ -616,14 +617,19 @@
                 totalDeviation += Math.abs(rollCounts[i] - expectedCount);
             }
 
-            let score = 10 - Math.round(totalDeviation / NORMALIZATION_FACTOR);
+            // Calculate score based on normalized deviation.
+            // totalDeviation * SENSITIVITY_FACTOR / totalRolls ensures the score scales with number of rolls.
+            const normalizedDeviation = (totalDeviation * SENSITIVITY_FACTOR) / totalRolls;
+            let score = 10 - Math.round(normalizedDeviation);
+            
+            // Clamp score between 1 and 10
             score = Math.max(1, Math.min(10, score)); 
 
             fairnessScoreDisplay.textContent = score;
             
             fairnessFill.style.width = `${score * 10}%`; 
-            fairnessFill.className = 'fairness-fill'; 
-            fairnessFill.classList.add(`score-${score}`); 
+            fairnessFill.className = 'fairness-fill'; // Reset classes to remove previous score class
+            fairnessFill.classList.add(`score-${score}`); // Add new score class for color
         }
 
         // Function to validate a single die input and update its visual state
@@ -706,14 +712,9 @@
             renderChart();
             addRollToHistory(die1, die2, sum, totalRolls); 
 
-            if (totalRolls % 10 === 0 || totalRolls === 10) {
-                calculateFairnessScore();
-            } else if (totalRolls < 10) { 
-                fairnessScoreDisplay.textContent = 'אין מספיק נתונים';
-                fairnessFill.style.width = '0%';
-                fairnessFill.className = 'fairness-fill'; 
-            }
-
+            // Calculate fairness score. No need for modulo, as calculateFairnessScore handles minimum rolls.
+            calculateFairnessScore();
+            
             die1Input.value = '';
             die2Input.value = '';
             die1Input.focus(); 
@@ -727,9 +728,10 @@
                 totalRolls = 0;
                 renderChart();
                 
+                // Reset fairness display to initial state
                 fairnessScoreDisplay.textContent = 'אין מספיק נתונים';
                 fairnessFill.style.width = '0%';
-                fairnessFill.className = 'fairness-fill'; 
+                fairnessFill.className = 'fairness-fill'; // Reset class
                 
                 rollHistoryList.innerHTML = ''; 
                 
@@ -772,6 +774,7 @@
             renderChart(); 
             checkRollButtonState(); 
             
+            // Ensure initial fairness display is correct
             fairnessScoreDisplay.textContent = 'אין מספיק נתונים'; 
             fairnessFill.style.width = '0%';
             fairnessFill.className = 'fairness-fill'; 
