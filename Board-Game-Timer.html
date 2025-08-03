@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>טיימר למשחק לוח</title>
+    <!-- Chart.js CDN for pie chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            direction: rtl; /* Ensure RTL for the whole body */
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        .screen {
+            display: none; /* Hidden by default */
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        h1, h2 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            text-align: right;
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1.1em;
+            text-align: right;
+            box-sizing: border-box; /* Include padding in width */
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin: 8px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Setup Screen Specifics */
+        #player-names-input div {
+            margin-bottom: 10px;
+        }
+
+        /* Game Screen Specifics */
+        #game-info {
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px; /* Spacing between elements */
+        }
+
+        #current-player-display {
+            font-size: 2.8em;
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+
+        #main-timer-display {
+            font-size: 4em;
+            font-weight: bold;
+            color: #343a40;
+            margin-bottom: 20px;
+            direction: ltr; /* Timer display should be LTR */
+            background-color: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        #sand-clock-container {
+            width: 80%;
+            max-width: 400px;
+            height: 30px;
+            background-color: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            direction: ltr; /* Progress bar LTR */
+        }
+
+        #sand-clock-progress {
+            height: 100%;
+            width: 100%;
+            background-color: #ffc107;
+            border-radius: 15px;
+            transition: width 0.5s linear, background-color 0.3s ease;
+        }
+
+        #game-buttons-container {
+            display: flex;
+            flex-direction: column; /* Stack buttons vertically */
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Table Styling */
+        .game-table, .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            font-size: 0.95em;
+        }
+
+        .game-table th, .summary-table th {
+            background-color: #007bff;
+            color: white;
+            padding: 14px;
+            text-align: right;
+            border: 1px solid #ddd;
+        }
+         .game-table th:first-child, .summary-table th:first-child {
+            border-top-right-radius: 8px;
+        }
+        .game-table th:last-child, .summary-table th:last-child {
+            border-top-left-radius: 8px;
+        }
+
+
+        .game-table td, .summary-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: right;
+            vertical-align: top;
+            direction: ltr; /* Time cells should be LTR */
+        }
+
+        .game-table td:first-child, .summary-table td:first-child {
+            direction: rtl; /* Player/Round name should be RTL */
+        }
+
+
+        .game-table tbody tr:nth-child(even), .summary-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .game-table tbody tr:hover, .summary-table tbody tr:hover {
+            background-color: #eef;
+        }
+
+        .fastest {
+            background-color: #d4edda !important; /* Light green */
+            color: #155724;
+            font-weight: bold;
+        }
+
+        .slowest {
+            background-color: #f8d7da !important; /* Light red */
+            color: #721c24;
+            font-weight: bold;
+        }
+
+        /* Summary Screen Specifics */
+        #total-game-time {
+            font-size: 2em;
+            font-weight: bold;
+            margin-top: 25px;
+            color: #343a40;
+        }
+
+        #player-time-chart-container {
+            margin-top: 30px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: center;
+        }
+        #player-time-chart {
+            max-width: 400px;
+            max-height: 400px;
+        }
+
+        .player-name-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .player-name-wrapper label {
+            flex-grow: 1;
+            text-align: right;
+            margin-left: 10px; /* Space between input and label */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 1. מסך הגדרות המשחק -->
+        <div id="setup-screen" class="screen active">
+            <h1>הגדרות המשחק</h1>
+            <div>
+                <label for="num-players">מספר שחקנים:</label>
+                <input type="number" id="num-players" value="2" min="2" max="10" onchange="setupPlayerCountChanged()">
+            </div>
+            <div>
+                <label for="max-turn-time">זמן מקסימלי לתור (דקות):</label>
+                <input type="number" id="max-turn-time" value="1" min="0.1" step="0.1">
+            </div>
+            <div id="player-names-input">
+                <!-- Player name inputs will be generated here -->
+            </div>
+            <button onclick="startGame()">התחל משחק</button>
+        </div>
+
+        <!-- 2. מסך המשחק הפעיל -->
+        <div id="game-screen" class="screen">
+            <h1>משחק פעיל</h1>
+            <div id="game-info">
+                <div id="current-player-display"></div>
+                <div id="main-timer-display">00:00</div>
+                <div id="sand-clock-container">
+                    <div id="sand-clock-progress"></div>
+                </div>
+                <button onclick="nextTurn()" id="next-turn-btn">העבר תור</button>
+                <div id="game-buttons-container">
+                    <button onclick="confirmEndGame()" style="background-color: #dc3545;">סיים משחק</button>
+                </div>
+            </div>
+
+            <h2>טבלת זמני סבבים</h2>
+            <table class="game-table">
+                <thead>
+                    <tr id="game-table-header-row">
+                        <th>סבב</th>
+                        <!-- Player names will be added here -->
+                    </tr>
+                </thead>
+                <tbody id="game-table-body">
+                    <!-- Turn times will be added here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 3. מסך סיכום המשחק -->
+        <div id="summary-screen" class="screen">
+            <h1>סיכום המשחק</h1>
+            <div id="total-game-time"></div>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>שחקן</th>
+                        <th>זמן כולל ששיחק</th>
+                        <th>זמן ממוצע לתור</th>
+                        <th>תור ארוך ביותר</th>
+                        <th>תור קצר ביותר</th>
+                    </tr>
+                </thead>
+                <tbody id="summary-table-body">
+                    <!-- Summary data will be added here -->
+                </tbody>
+            </table>
+            <h2>חלוקת זמני משחק</h2>
+            <div id="player-time-chart-container">
+                <canvas id="player-time-chart"></canvas>
+            </div>
+            <button onclick="resetGame()" style="background-color: #28a745;">שחק שוב</button>
+        </div>
+
+        <!-- Audio element for timer sound -->
+        <audio id="timer-sound" src="beep.mp3" preload="auto"></audio>
+    </div>
+
+    <script>
+        // DOM Element References
+        const setupScreen = document.getElementById('setup-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const summaryScreen = document.getElementById('summary-screen');
+
+        const numPlayersInput = document.getElementById('num-players');
+        const maxTurnTimeInput = document.getElementById('max-turn-time');
+        const playerNamesInputDiv = document.getElementById('player-names-input');
+
+        const currentPlayerDisplay = document.getElementById('current-player-display');
+        const mainTimerDisplay = document.getElementById('main-timer-display');
+        const sandClockProgress = document.getElementById('sand-clock-progress');
+        const nextTurnBtn = document.getElementById('next-turn-btn');
+        const gameTable = document.querySelector('.game-table');
+        const gameTableHeaderRow = document.getElementById('game-table-header-row');
+        const gameTableBody = document.getElementById('game-table-body');
+        const timerSound = document.getElementById('timer-sound');
+
+        const totalGameTimeDisplay = document.getElementById('total-game-time');
+        const summaryTableBody = document.getElementById('summary-table-body');
+        const playerTimeChartCanvas = document.getElementById('player-time-chart');
+
+        // Game State Variables
+        let gameSettings = {
+            maxTurnTimeSeconds: 60, // Default to 1 minute
+            playerNames: [],
+            playerOrder: [] // Array of player names in turn order
+        };
+
+        let gameState = {
+            currentPlayerIndex: 0,
+            currentTurnStartTime: 0, // Unix timestamp for current turn start
+            gameStartTime: 0,       // Unix timestamp for overall game start
+            roundNumber: 1,
+            playerData: {},         // { 'Player Name': { totalTime: 0, turns: [t1, t2, ...], minTurn: Infinity, maxTurn: 0 } }
+            turnHistory: [],        // [ { round: 1, playerTimes: { 'P1': 45, 'P2': 150 } }, ... ]
+            currentTurnExceededMax: false // Flag to play sound only once when max time is exceeded
+        };
+
+        // Timer Intervals and Chart instance
+        let turnTimerInterval;
+        let gameTimerOverallInterval;
+        let playerTimeChartInstance = null; // To hold the Chart.js instance
+
+        // Helper Functions
+        function formatTime(seconds) {
+            if (isNaN(seconds) || seconds < 0) return "00:00";
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Function to generate distinct colors for chart slices
+        function generateColors(num) {
+            const colors = [
+                '#42A5F5', '#66BB6A', '#FFA726', '#EF5350', '#AB47BC',
+                '#26C6DA', '#78909C', '#FFEB3B', '#8D6E63', '#9CCC65'
+            ];
+            // If more colors are needed than predefined, generate them
+            while (colors.length < num) {
+                const r = Math.floor(Math.random() * 200);
+                const g = Math.floor(Math.random() * 200);
+                const b = Math.floor(Math.random() * 200);
+                colors.push(`rgb(${r},${g},${b})`);
+            }
+            return colors.slice(0, num);
+        }
+
+        // --- Setup Screen Logic ---
+        function setupPlayerCountChanged() {
+            const numPlayers = parseInt(numPlayersInput.value);
+            playerNamesInputDiv.innerHTML = '';
+            gameSettings.playerNames = []; // Clear previous names
+            for (let i = 0; i < numPlayers; i++) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'player-name-wrapper';
+
+                const label = document.createElement('label');
+                label.setAttribute('for', `player-name-${i + 1}`);
+                label.textContent = `שם שחקן ${i + 1}:`;
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `player-name-${i + 1}`;
+                input.placeholder = `שחקן ${i + 1}`;
+                input.value = `שחקן ${i + 1}`; // Default name for convenience
+
+                wrapper.appendChild(label);
+                wrapper.appendChild(input);
+                playerNamesInputDiv.appendChild(wrapper);
+            }
+        }
+
+        function startGame() {
+            const numPlayers = parseInt(numPlayersInput.value);
+            gameSettings.maxTurnTimeSeconds = parseFloat(maxTurnTimeInput.value) * 60; // Convert minutes to seconds
+
+            gameSettings.playerNames = [];
+            gameSettings.playerOrder = [];
+            for (let i = 0; i < numPlayers; i++) {
+                const playerNameInput = document.getElementById(`player-name-${i + 1}`);
+                const playerName = playerNameInput.value.trim();
+                if (playerName === '') {
+                    alert(`אנא הזן שם עבור שחקן ${i + 1}.`);
+                    return;
+                }
+                gameSettings.playerNames.push(playerName);
+                gameSettings.playerOrder.push(playerName); // Initial order is the input order
+            }
+
+            // Initialize gameState for a new game
+            gameState.currentPlayerIndex = 0;
+            gameState.roundNumber = 1;
+            gameState.playerData = {};
+            gameState.turnHistory = [];
+            gameState.gameStartTime = Date.now();
+            gameState.currentTurnExceededMax = false;
+
+            gameSettings.playerNames.forEach(name => {
+                gameState.playerData[name] = {
+                    totalTime: 0,
+                    turns: [],
+                    minTurn: Infinity, // Initialize with Infinity
+                    maxTurn: 0        // Initialize with 0
+                };
+            });
+
+            updateGameTableHeaders();
+            updateGameTableBody(); // Clear any previous table content
+
+            startTurn();
+            showScreen('game-screen');
+        }
+
+        // --- Game Screen Logic ---
+        function startTurn() {
+            const currentPlayerName = gameSettings.playerOrder[gameState.currentPlayerIndex];
+            currentPlayerDisplay.textContent = `תורו של: ${currentPlayerName}`;
+            gameState.currentTurnStartTime = Date.now();
+            gameState.currentTurnExceededMax = false; // Reset flag for new turn
+
+            clearInterval(turnTimerInterval);
+            turnTimerInterval = setInterval(updateTurnTimer, 1000);
+
+            // Start overall game timer if it's the very first turn of the game
+            if (!gameTimerOverallInterval) {
+                gameTimerOverallInterval = setInterval(updateOverallGameTimer, 1000);
+            }
+        }
+
+        function updateTurnTimer() {
+            const currentTime = Date.now();
+            const elapsedSeconds = (currentTime - gameState.currentTurnStartTime) / 1000;
+            mainTimerDisplay.textContent = formatTime(elapsedSeconds);
+
+            const progressPercentage = Math.min(100, (elapsedSeconds / gameSettings.maxTurnTimeSeconds) * 100);
+            sandClockProgress.style.width = `${100 - progressPercentage}%`; // Decrease width as time passes
+            sandClockProgress.style.backgroundColor = progressPercentage > 80 ? '#dc3545' : '#ffc107'; // Red near end
+
+            if (elapsedSeconds >= gameSettings.maxTurnTimeSeconds && !gameState.currentTurnExceededMax) {
+                timerSound.play();
+                gameState.currentTurnExceededMax = true; // Set flag to prevent repeated sound
+            }
+        }
+
+        function updateOverallGameTimer() {
+            // This function runs to keep gameState.gameStartTime accurate for total game time calculation
+            // No direct UI update for overall game time on this screen.
+        }
+
+        function recordCurrentTurn() {
+            const currentTime = Date.now();
+            const turnDuration = Math.floor((currentTime - gameState.currentTurnStartTime) / 1000); // in seconds
+
+            const currentPlayerName = gameSettings.playerOrder[gameState.currentPlayerIndex];
+            const playerData = gameState.playerData[currentPlayerName];
+
+            // Update player's individual data
+            playerData.totalTime += turnDuration;
+            playerData.turns.push(turnDuration);
+            // Update min/max only if there are turns
+            if (turnDuration > 0) { // Only update if actual time was spent
+                playerData.minTurn = Math.min(playerData.minTurn, turnDuration);
+                playerData.maxTurn = Math.max(playerData.maxTurn, turnDuration);
+            }
+
+
+            // Update turn history for the table
+            if (gameState.turnHistory.length < gameState.roundNumber) {
+                gameState.turnHistory.push({ round: gameState.roundNumber, playerTimes: {} });
+            }
+            // Check if player already recorded for this round (e.g. if nextTurn was called for this player then the game ended before next turn)
+            // Or if this player just started this round
+            if (gameState.turnHistory[gameState.roundNumber - 1].playerTimes[currentPlayerName] === undefined || 
+                (gameState.turnHistory[gameState.roundNumber - 1].playerTimes[currentPlayerName] < turnDuration)) {
+                // This logic is tricky: if nextTurn() recorded, it already has the value.
+                // If endGame() called mid-turn, this updates with the final duration.
+                // For simplicity, always overwrite with the final duration for the current turn.
+                gameState.turnHistory[gameState.roundNumber - 1].playerTimes[currentPlayerName] = turnDuration;
+            }
+
+            return turnDuration;
+        }
+
+        function nextTurn() {
+            recordCurrentTurn(); // Record the current player's turn time
+
+            updateGameTableBody(); // Update table after recording current player's turn
+
+            // Advance to next player
+            gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameSettings.playerOrder.length;
+            if (gameState.currentPlayerIndex === 0) {
+                gameState.roundNumber++; // New round starts
+            }
+
+            startTurn();
+        }
+
+        function updateGameTableHeaders() {
+            gameTableHeaderRow.innerHTML = '<th>סבב</th>'; // Reset
+            gameSettings.playerOrder.forEach(playerName => {
+                const th = document.createElement('th');
+                th.textContent = playerName;
+                gameTableHeaderRow.appendChild(th);
+            });
+        }
+
+        function updateGameTableBody() {
+            gameTableBody.innerHTML = ''; // Clear existing rows
+            gameState.turnHistory.forEach(roundData => {
+                const tr = document.createElement('tr');
+                const roundCell = document.createElement('td');
+                roundCell.textContent = `סבב ${roundData.round}`;
+                roundCell.style.direction = 'rtl'; // Ensure round number is RTL
+                tr.appendChild(roundCell);
+
+                gameSettings.playerOrder.forEach(playerName => {
+                    const timeCell = document.createElement('td');
+                    const time = roundData.playerTimes[playerName];
+                    timeCell.textContent = time !== undefined ? formatTime(time) : '-'; // Show '-' if player hasn't played in this round yet
+                    timeCell.style.direction = 'ltr'; // Ensure time is LTR
+                    tr.appendChild(timeCell);
+                });
+                gameTableBody.appendChild(tr);
+            });
+        }
+
+        // --- Summary Screen Logic ---
+        function confirmEndGame() {
+            const confirmed = confirm("האם אתה בטוח שנגמר המשחק? לא תהיה דרך חזרה.");
+            if (confirmed) {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            clearInterval(turnTimerInterval);
+            clearInterval(gameTimerOverallInterval); // Stop overall game timer
+            gameTimerOverallInterval = null; // Reset for next game
+
+            // Record the last turn's duration if the game was ended mid-turn
+            // This needs to be done *before* calculating total game time or populating summary
+            recordCurrentTurn(); // This ensures the final partial turn is counted.
+
+            // Calculate total game time
+            const totalGameSeconds = Math.floor((Date.now() - gameState.gameStartTime) / 1000);
+            totalGameTimeDisplay.textContent = `זמן משחק כולל: ${formatTime(totalGameSeconds)}`;
+
+            populateSummaryTable();
+            renderPieChart();
+            showScreen('summary-screen');
+        }
+
+        function populateSummaryTable() {
+            summaryTableBody.innerHTML = ''; // Clear previous data
+
+            const playerSummary = [];
+            gameSettings.playerNames.forEach(name => {
+                const data = gameState.playerData[name];
+                const totalTurns = data.turns.length;
+                const averageTime = totalTurns > 0 ? data.totalTime / totalTurns : 0;
+
+                playerSummary.push({
+                    name: name,
+                    totalTime: data.totalTime,
+                    averageTime: averageTime,
+                    minTurn: data.minTurn === Infinity ? 0 : data.minTurn, // Handle Infinity if no turns taken (shouldn't happen in finished game)
+                    maxTurn: data.maxTurn
+                });
+            });
+
+            // Sort players by total time (ascending) to find fastest/slowest easily
+            playerSummary.sort((a, b) => a.totalTime - b.totalTime);
+
+            // The fastest player is the one with the lowest total time.
+            // The slowest player is the one with the highest total time.
+            const fastestPlayer = playerSummary[0];
+            const slowestPlayer = playerSummary[playerSummary.length - 1];
+
+            playerSummary.forEach(player => {
+                const tr = document.createElement('tr');
+                // Apply classes for highlighting
+                if (player === fastestPlayer) {
+                    tr.classList.add('fastest');
+                } else if (player === slowestPlayer) {
+                    tr.classList.add('slowest');
+                }
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = player.name;
+                nameCell.style.direction = 'rtl'; // Player name is RTL
+                tr.appendChild(nameCell);
+
+                const totalTimeCell = document.createElement('td');
+                totalTimeCell.textContent = formatTime(player.totalTime);
+                tr.appendChild(totalTimeCell);
+
+                const avgTimeCell = document.createElement('td');
+                avgTimeCell.textContent = formatTime(player.averageTime);
+                tr.appendChild(avgTimeCell);
+
+                const maxTurnCell = document.createElement('td'); // Note: Column order is now max then min in image
+                maxTurnCell.textContent = formatTime(player.maxTurn);
+                tr.appendChild(maxTurnCell);
+
+                const minTurnCell = document.createElement('td');
+                minTurnCell.textContent = formatTime(player.minTurn);
+                tr.appendChild(minTurnCell);
+
+                summaryTableBody.appendChild(tr);
+            });
+        }
+
+        function renderPieChart() {
+            if (playerTimeChartInstance) {
+                playerTimeChartInstance.destroy(); // Destroy existing chart instance if any
+            }
+
+            const ctx = playerTimeChartCanvas.getContext('2d');
+            const labels = [];
+            const data = [];
+            const backgroundColors = generateColors(gameSettings.playerNames.length);
+            const borderColors = backgroundColors.map(color => color.replace('rgb', 'rgba').replace(')', ', 0.8)'));
+
+            gameSettings.playerNames.forEach(name => {
+                labels.push(name);
+                data.push(gameState.playerData[name].totalTime);
+            });
+
+            playerTimeChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            rtl: true, // RTL for legend
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: 'Arial, sans-serif'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += formatTime(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            },
+                            rtl: true // RTL for tooltips
+                        }
+                    }
+                }
+            });
+        }
+
+
+        function resetGame() {
+            // Clear all state
+            gameSettings.playerNames = [];
+            gameSettings.playerOrder = [];
+            gameSettings.maxTurnTimeSeconds = 60; // Reset default
+
+            gameState.currentPlayerIndex = 0;
+            gameState.currentTurnStartTime = 0;
+            gameState.gameStartTime = 0;
+            gameState.roundNumber = 1;
+            gameState.playerData = {};
+            gameState.turnHistory = [];
+            gameState.currentTurnExceededMax = false;
+
+            clearInterval(turnTimerInterval);
+            clearInterval(gameTimerOverallInterval);
+            gameTimerOverallInterval = null; // Clear interval ID
+
+            // Destroy Chart.js instance
+            if (playerTimeChartInstance) {
+                playerTimeChartInstance.destroy();
+                playerTimeChartInstance = null;
+            }
+
+            // Reset UI elements
+            numPlayersInput.value = 2;
+            maxTurnTimeInput.value = 1;
+            playerNamesInputDiv.innerHTML = ''; // Clear player name inputs
+            mainTimerDisplay.textContent = '00:00';
+            sandClockProgress.style.width = '100%';
+            sandClockProgress.style.backgroundColor = '#ffc107';
+            gameTableHeaderRow.innerHTML = '<th>סבב</th>';
+            gameTableBody.innerHTML = '';
+            summaryTableBody.innerHTML = '';
+            totalGameTimeDisplay.textContent = '';
+
+
+            setupPlayerCountChanged(); // Re-generate default player inputs
+            showScreen('setup-screen');
+        }
+
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setupPlayerCountChanged(); // Populate initial player name inputs
+            showScreen('setup-screen');
+        });
+    </script>
+</body>
+</html>
