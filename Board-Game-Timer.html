@@ -110,7 +110,7 @@
         }
 
         #main-timer-display {
-            font-size: 4em;
+            font-size: 5.5em; /* Increased font size */
             font-weight: bold;
             color: #343a40;
             margin-bottom: 20px;
@@ -355,7 +355,8 @@
             roundNumber: 1,
             playerData: {},         // { 'Player Name': { totalTime: 0, turns: [t1, t2, ...], minTurn: Infinity, maxTurn: 0 } }
             turnHistory: [],        // [ { round: 1, playerTimes: { 'P1': 45, 'P2': 150 } }, ... ]
-            currentTurnExceededMax: false // Flag to play sound only once when max time is exceeded
+            currentTurnExceededMax: false, // Flag to play sound only once when max time is exceeded
+            lastSpokenMinute: 0     // Tracks the last minute spoken for over-time warnings
         };
 
         // Timer Intervals and Chart instance
@@ -392,6 +393,21 @@
                 colors.push(`rgb(${r},${g},${b})`);
             }
             return colors.slice(0, num);
+        }
+
+        // Text-to-Speech function
+        function speakWarning(message) {
+            if ('speechSynthesis' in window) {
+                // Cancel any pending speech to avoid overlapping
+                window.speechSynthesis.cancel(); 
+                const utterance = new SpeechSynthesisUtterance(message);
+                utterance.lang = 'en-US'; // Set language to English
+                utterance.rate = 1; // Normal speed
+                utterance.volume = 1; // Full volume
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.warn("Speech synthesis not supported in this browser.");
+            }
         }
 
         // --- Setup Screen Logic ---
@@ -443,6 +459,7 @@
             gameState.turnHistory = [];
             gameState.gameStartTime = Date.now();
             gameState.currentTurnExceededMax = false;
+            gameState.lastSpokenMinute = 0; // Reset last spoken minute for new game
 
             gameSettings.playerNames.forEach(name => {
                 gameState.playerData[name] = {
@@ -466,6 +483,7 @@
             currentPlayerDisplay.textContent = `תורו של: ${currentPlayerName}`;
             gameState.currentTurnStartTime = Date.now();
             gameState.currentTurnExceededMax = false; // Reset flag for new turn
+            gameState.lastSpokenMinute = 0; // Reset last spoken minute for new turn
 
             clearInterval(turnTimerInterval);
             turnTimerInterval = setInterval(updateTurnTimer, 1000);
@@ -486,8 +504,23 @@
             sandClockProgress.style.backgroundColor = progressPercentage > 80 ? '#dc3545' : '#ffc107'; // Red near end
 
             if (elapsedSeconds >= gameSettings.maxTurnTimeSeconds && !gameState.currentTurnExceededMax) {
-                timerSound.play();
-                gameState.currentTurnExceededMax = true; // Set flag to prevent repeated sound
+                timerSound.play(); // Play beep sound
+                speakWarning("Time's up! One minute passed."); // Initial warning
+                gameState.currentTurnExceededMax = true;
+                gameState.lastSpokenMinute = 1; // Mark that 1 minute has been spoken after the max turn time
+            }
+
+            // Check for subsequent minutes passed after max turn time
+            if (gameState.currentTurnExceededMax) {
+                // Calculate how many *full* minutes have passed since the max turn time was exceeded
+                const minutesOverMax = Math.floor((elapsedSeconds - gameSettings.maxTurnTimeSeconds) / 60);
+                
+                // If the current minutesOverMax is greater than what we last spoke
+                // And it's not the initial 'Time's up! One minute passed.'
+                if (minutesOverMax > 0 && minutesOverMax > (gameState.lastSpokenMinute - 1)) { // -1 because lastSpokenMinute starts at 1
+                    speakWarning(`${minutesOverMax + 1} minutes passed.`); // +1 to say "Two minutes passed" when minutesOverMax is 1
+                    gameState.lastSpokenMinute = minutesOverMax + 1;
+                }
             }
         }
 
@@ -628,9 +661,9 @@
             playerSummary.forEach(player => {
                 const tr = document.createElement('tr');
                 // Apply classes for highlighting
-                if (player === fastestPlayer) {
+                if (player === fastestPlayer && player.totalTime > 0) { // Only highlight if actually played
                     tr.classList.add('fastest');
-                } else if (player === slowestPlayer) {
+                } else if (player === slowestPlayer && player.totalTime > 0) {
                     tr.classList.add('slowest');
                 }
 
@@ -734,6 +767,7 @@
             gameState.playerData = {};
             gameState.turnHistory = [];
             gameState.currentTurnExceededMax = false;
+            gameState.lastSpokenMinute = 0; // Reset last spoken minute
 
             clearInterval(turnTimerInterval);
             clearInterval(gameTimerOverallInterval);
@@ -743,6 +777,10 @@
             if (playerTimeChartInstance) {
                 playerTimeChartInstance.destroy();
                 playerTimeChartInstance = null;
+            }
+            // Cancel any pending speech
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
             }
 
             // Reset UI elements
